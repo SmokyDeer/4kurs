@@ -1,0 +1,7 @@
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\bin\Debug\Lab1.exe.config
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\bin\Debug\Lab1.exe
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\bin\Debug\Lab1.pdb
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\obj\Debug\Lab1.csproj.AssemblyReference.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\obj\Debug\Lab1.csproj.CoreCompileInputs.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\obj\Debug\Lab1.exe
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba1\Lab1\obj\Debug\Lab1.pdb
