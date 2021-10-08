@@ -43,11 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalculatorRPN.cs" />
+    <Compile Include="Converter.cs" />
+    <Compile Include="MainCalculator.cs" />
+    <Compile Include="Operators\AdditionOperator.cs" />
+    <Compile Include="Operators\BinaryOperator.cs" />
+    <Compile Include="Operators\DivisionOperator.cs" />
+    <Compile Include="Operators\MultiplicationOperator.cs" />
+    <Compile Include="Operators\Operator.cs" />
+    <Compile Include="Operators\SubtractionOperator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
