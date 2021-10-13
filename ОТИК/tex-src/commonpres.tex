@@ -1,0 +1,24 @@
+\input{\COMMONPATH/classes/pres11ucs}
+
+\graphicspath{{\ROOTPATH/fig/}}
+
+
+\let\originsertdate\insertdate
+\def\insertdate{\originsertdate{} --- актуальную версию можно найти на \url{https://gitlab.com/illinc/otik}}
+
+% \setbeamerfont{frametitle}{size=\linespread{1.0}\normalsize}
+
+\def\MsgAsX{C}
+
+
+\newcommand{\makethanks}{%
+\section*{}
+\begin{frame}{Спасибо за внимание!}
+
+\insertinstitute\\ \AlmaMaterUrl{}\bigskip
+
+\insertauthor\\ {\MyEmail}\\
+\url{gitlab.com/illinc/raspisanie}\bigskip
+
+\end{frame}
+}

@@ -34,10 +34,19 @@ namespace TestRPN
         }
 
         [TestMethod]
+        public void TestSingleInputNegative()
+        {
+            string input = "-0.1-0.2";
+            string expected = "-0.1 0.2 -";
+            string actual = Converter.InfixToPostfix(input);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
         public void TestNegativeInput()
         {
             string input = "-8+5";
-            string expected = "8 - 5 +";
+            string expected = "-8 5 +";
             string actual = Converter.InfixToPostfix(input);
             Assert.AreEqual(expected, actual);
         }

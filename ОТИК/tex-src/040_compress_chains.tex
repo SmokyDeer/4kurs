@@ -1,0 +1,1618 @@
+\input{commonpath}
+\input{\ROOTPATH/commonpres}
+
+% \title{Сжатие информации с~учётом контекста.
+% \mbox{Словарные методы, где словарём} является \mbox{несжатый текст} --- \mbox{семейство LZ77}}
+
+\title{Сжатие с~учётом контекста.
+\mbox{Словарные методы, где словарём} является \mbox{несжатый текст} --- \mbox{семейство LZ77}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% https://mf.grsu.by/UchProc/livak/po/comprsite/theory_contents.html#%D0%A1%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D0%BD%D0%B8%D0%B5
+
+% статья 77
+% https://www2.cs.duke.edu/courses/spring03/cps296.5/papers/ziv_lempel_1977_universal_algorithm.pdf
+
+% LZSS
+% https://link.springer.com/chapter/10.1007/978-3-642-82456-2_8
+
+% Can be used only in preamble.
+\DeclareMathOperator{\lo}{lo}
+\DeclareMathOperator{\hi}{hi}
+
+
+\begin{document}
+\maketitle
+
+
+\newcommand{\nondecdigit}[1]{\lapbox[\digitwidth]{0.06\digitwidth}{\ensuremath{\mathrm{\resizebox*{1.12\digitwidth}{\digitheight}{#1}}}}}
+\newcommand{\digitA}{\nondecdigit{A}}
+\newcommand{\digitB}{\nondecdigit{B}}
+\newcommand{\digitC}{\nondecdigit{C}}
+\newcommand{\digitD}{\nondecdigit{D}}
+\newcommand{\digitE}{\nondecdigit{E}}
+\newcommand{\digitF}{\nondecdigit{F}}
+
+\colorlet{clCode}{red}
+\newcommand{\cm}[1]{\textcolor{red}{#1}}
+\newcommand{\ctm}[1]{\textcolor{violet}{#1}}
+\newcommand{\um}[1]{\textcolor{green!70!black}{#1}}
+
+
+\tikzstyle{tnode}	= [circle, minimum height=1.2ex, draw=black,inner sep=0pt, outer sep=0pt]
+
+  
+\subsection{Источник с~памятью}
+
+
+% \subsection{Источник данных с~памятью}
+\begin{frame}{\insertsubsection}
+\footnotesize
+% \small
+\setlength{\parskip}{0.5\parskip} 
+
+Вероят­ность порождения элемента определяется предысторией источника
+$\to$ при сжатии необходимо учитывать контекст символа.
+
+% % \subsection{Модели источника данных}
+% \begin{description}[Сж]
+% 
+% \item[Источ­ник Маркова ($N$-го порядка)] "--- состояние на $i$-м шаге зависит от состояний на $N$ предыдущих шагах: $i-1, i-2,..., i-N$.
+% 
+% \item[Аналоговый сигнал]"--- источник количественных данных Маркова 1-го порядка.
+% 
+% \end{description}
+\setlength{\leftmargini}{0ex}
+% \begin{itemize}
+% 
+% \item Аналоговый сигнал с~малым количеством состояний (например, чёрно-белый рисунок) "---
+% сжимаются цепочки из одинаковых символов.
+% 
+% \item Словарные методы "--- сжимаются не отдельные символы, а~устойчивые их сочетания "--- слова
+% \end{itemize}
+% \end{enumerate}
+\vspace{-0.2\baselineskip}
+\begin{description}[Сж]
+\item[источ­ник Маркова ($N$-го порядка)] "--- состояние на $i$-м шаге зависит от состояний на $N$ предыдущих шагах: $i-1, i-2,..., i-N$
+$\to$  сжимаются не отдельные символы, {а~устойчивые сочетания} "--- слова: \\коды Зива"--~Лемпеля  (LZ77, LZ78);
+
+\item[аналоговый сигнал]"--- источник количественных данных Маркова 1-го порядка
+% 
+$\to$ кодирование длин повторений (Run Length Encoding, RLE).
+
+\end{description}
+
+При расчёте количества информации источника 
+% с~памятью вероятности символов непостоянны (также учитываем контекст) 
+Маркова $N$-го порядка вероятности %на $i$-й позиции 
+зависят от предыдущих $N$ символов (непостоянны).
+\end{frame}
+
+
+\subsection{Размер байта -- 4 бита}
+\begin{frame}{\insertsubsection}
+\footnotesize
+\setlength{\parskip}{0.5\parskip}
+
+Для компактной иллюстрации ограничений алгоритмов примем, что~для устройства «доска» байт (символ кодирования) составляет не~8~бит "---октет 
+% или две тетрады, или~две~16-ричные цифры, 
+(как для Intel x86/amd64), и~не 6 бит {(%две триады, или две восьмеричные цифры, 
+как для IBM 7030 Stretch),} 
+\mbox{а~4 бита} "--- %двоичную 
+тетраду, или одну 16-ричную цифру:
+
+$\hex{0} = 0000 = 0$ ~~~~~~ $\hex{8} = 1000 = 8$\\
+$\hex{1} = 0001 = 1$ ~~~~~~ $\hex{9} = 1001 = 9$\\
+$\hex{2} = 0010 = 2$ ~~~~~~ $\hex{A} = 1010 = 10$\\
+$\hex{3} = 0011 = 3$ ~~~~~~ $\hex{B} = 1011 = 11$\\
+$\hex{4} = 0100 = 4$ ~~~~~~ $\hex{C} = 1100 = 12$\\
+$\hex{5} = 0101 = 5$ ~~~~~~ $\hex{D} = 1101 = 13$\\
+$\hex{6} = 0110 = 6$ ~~~~~~ $\hex{E} = 1110 = 14$\\
+$\hex{7} = 0111 = 7$ ~~~~~~ $\hex{F} = 1111 = 15$
+% $\hex{8} = 1000 = 8$\\
+% $\hex{9} = 1001 = 9$\\
+
+Символьная таблица (аналог ASCII) даётся отдельно в~каждом примере, либо отсутствует.
+
+\end{frame}
+
+
+\section{Run Length Encoding, RLE (аналоговый сигнал)}
+% http://habrahabr.ru/post/141827/
+
+% \subsection{Концепция RLE}
+% \begin{frame}{\insertsubsection}
+
+% \begin{frame}{\insertsection}
+
+\begin{frame}{Концепция RLE}
+
+\footnotesize
+% % \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% % \lstset{xleftmargin=1em,numbers=none}
+% % \lstset{lineskip=0.5ex}
+% % \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+% \setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+% \setlength{\leftmargini}{0ex}
+% \setlength{\leftmarginii}{3ex}
+% \setlength{\parskip}{0.\parskip}
+% 
+% \setlength{\digitwidth}{\widthof{$0$}}
+% \setlength{\digitheight}{\heightof{$0$}}
+% 
+% \smallskip
+
+Модель источника данных "--- Маркова первого порядка (аналоговый сигнал): вероятность символа зависит от предыдущего символа.
+
+Run Length Encoding (RLE): вместо кодирования данных кодируются длины участков, на которых данные сохраняют неизменное значение. 
+ 
+$\mathrm{AAAAAAAABCCCC} \to 8 \times\mathrm{A}, 1\times\mathrm{B}, 4\times\mathrm{C}$
+
+Повторение символа $c$ подряд $L$ раз ($L\times c$) "--- цепочку длины $L$, $L\geqslant 1$  будем записывать как пару $(L, c)$.
+
+Если $c$ и~$L$ одного размера "--- это имеет смысл (приводит к~сжатию цепочки) только при $L > 2$ ($L\geqslant 3$).
+
+% % При записи 
+% $L\times c \to (L, c)$,
+% в~наихудшем случае "--- увеличение объёма в~2~раза: 
+% \texttt{0123456789ABCDEF} $\to$ \texttt{101112131415161718191A1B1C1D1E1F}
+%  
+% % 
+% % \medskip
+% Сжатие RLE "--- только для $L > 2$
+
+% Два вида последовательностей: 
+% \begin{itemize}
+% \item несжимаемые ($\mathrm{CAABC}$)
+% \item сжимаемые ($\mathrm{BBBBB} \to 5\times \mathrm{B}$)
+% \end{itemize}
+
+
+% Имеется два вида последовательностей: 
+% % цепочки одиночных элементов (4, 2, 0)
+% несжатые последовательности неповторяющихся элементов ($\mathrm{CABC}$)
+% % и цепочки одинаковых элементов (0, 0, 0, 0, 0, 0).
+% и~сжимаемые последовательности повторяющихся элементов ($\mathrm{BBBBB} \to 5\times \mathrm{B}$)
+% % Выделим в «служебных» байтах один бит под тип последовательности: 0 — одиночные элементы, 1 — одинаковые. Возьмём для этого, скажем, старший бит байта
+ 
+\end{frame}
+
+
+
+\subsection{Основные варианты кодирования RLE}
+\begin{frame}{\insertsubsection}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+% \setlength{\digitwidth}{\widthof{$0$}}
+% \setlength{\digitheight}{\heightof{$0$}}
+
+
+
+\begin{enumerate}
+\item Наивный "--- любая цепочка $L\times c $ для любого $L$ ($L \geqslant 1$) заменяется парой $(L, c)$:
+$\forall L: ~L\times c \to (L, c)$
+% \\
+% \textterminblue{увеличение объёма в~наихудшем случае "--- в~2~раза;}
+
+\item Сжатые и~несжатые цепочки (флаг-бит) "--- 
+ парой $(L, c)$ заменяются только длинные цепочки $L\geqslant 3$,
+короткие цепочки из одного и~двух символов объединяются в~более длинные несжатые цепочки, каждая из которых также предваряется длиной $L$; 
+\\
+для различения сжатых и~несжатых цепочек выделяется один бит поля $L$:
+% (для кодирования собственно длины $L$ остаётся 7 бит из байта-октета или 3 из байта-тетрады): 
+{$\left\{\begin{array}{@{}rcl@{}}
+L\times c, L \geqslant 3 &\to& (1+L, c), \\
+c_1\ldots c_L, L \geqslant 1 &\to& (0+L, c_1\ldots c_L).
+\end{array}\right.$}
+
+% \hspace*{-2em}%
+% % 8-битный байт 
+% байт-октет
+% "--- 7 бит на $L$ ($0\ldots127$ без коррекции),
+% % 4-битный байт "--- 3 бита на $L$ ($0\ldots7$ без коррекции):
+% \rlap{4-битный "--- 3 ($0\ldots7$):}
+
+
+\item Префикс сжатой цепочки в~несжатом тексте
+"--- 
+текст записывается как есть, длинные цепочки заменяются \termin{тройками} $(p, L, c)$, где $p \in A$% "--- префикс
+; сжатие "--- только при $L \geqslant 4$:
+% $L\times c, L \geqslant 4 \to (p, L, c)$
+$\left\{\begin{array}{@{}rcl@{}}
+L\times c, L \geqslant 4 &\to& (p, L, c), \\
+c_1\ldots c_L, L \geqslant 1 &\to& c_1\ldots c_L. \\
+L\times p, L \geqslant 1 &\to& (p, L, p). \\
+\end{array}\right.$
+\\
+Префикс $p$ 
+выбирается как самый редкий символ текста.
+
+% как символ текста "--- либо экранировать ($p \to (p, 0)$), 
+% \\
+% либо всегда записывать как цепочку ($p \to (p, L, p)$)
+
+% % ${\underbrace{0}_p 123456789\underbrace{AAAAAAAA}_8 BCDEF} \to {01012345678908ABCDEF}$
+% $p=\hex{C}$: \texttt{0123456789\cm{AAAAAAAA}B\cm{C}DEF} (23) $\to$ \texttt{0123456789\cm{C8A}B\cm{C1C}DEF} \rlap{(20)}
+% или~\texttt{0123456789\cm{C8A}B\cm{C0}DEF} (19)
+% \rlap{\textterminblue{(для октетов ув.\,в~нх.\,сл. на $\frac{2}{256}$ или $\frac{1}{256}$)}}
+% 
+% \hspace*{-2em}Коррекция: для \hex{C0}~$(p, L-3, c)$; для \hex{C1C} 
+% % --- без коррекции либо 
+% {$\left\{\begin{array}{@{}rcl@{}}
+% L\times c, c \neq p &\to& (p, c, L-4) \\
+% L\times p &\to& (p, p, L-1), \\
+% \end{array}\right.$}
+
+\end{enumerate}
+
+\end{frame}
+
+
+
+\subsection{Сравнение (без коррекции длины)}
+\begin{frame}[allowframebreaks]{\insertsubsection}
+\begin{adjustwidth}{-1.0em}{-1.8em}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+
+% \scriptsize
+% \setbeamertemplate{itemize/enumerate body begin}{\scriptsize}
+% \setbeamertemplate{itemize/enumerate subbody begin}{\scriptsize}
+
+% \setlength{\leftmargini}{-1ex}
+\setlength{\leftmarginii}{1ex}
+\setlength{\parskip}{0.\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+
+Исходные сообщения:
+\begin{itemize}
+\item \texttt{AAAAAAAAAAAAAAAABB} (18) "--- хороший случай ($16\times\hex{A}$ и~$2\times\hex{B}$)
+\item \texttt{AABCDDEF0012} (12) "--- нормальный случай
+\item \texttt{0123456789{AAAAAAAA}BCDEF} (23)  "--- нормальный случай ($8\times\hex{A}$)
+\item \texttt{0123456789ABCDEF} (16)  "--- наихудший случай
+\end{itemize}
+
+\bigskip
+
+\begin{enumerate}
+\item Наивный вариант:
+
+% \texttt{\cm{AAAAAAAAAAAAAAA}A\cm{BB}} $\to$ \texttt{\cm{FA}1A\cm{2B}} (6) или \texttt{\cm{AF}A1\cm{B2}}  (6)
+
+$\hex{\cm{AAAAAAAAAAAAAAA}A\cm{BB}} 
+\to
+\left[\begin{array}{@{}l@{}}
+\texttt{\cm{FA}1A\cm{2B}}~  (6)
+\\
+\texttt{\cm{AF}A1\cm{B2}} ~  (6)
+\end{array}\right.$
+\textcolor{gray}{для наивного RLE допустимы оба порядка полей "--- $(L, c)$ или  $(c, L)$; далее используется $(L, c)$ для единообразия}
+
+
+\texttt{\cm{AA}BC\cm{DD}EF\cm{00}12} $\to$ \texttt{\cm{2A}1B1C\cm{2D}1E1F\cm{20}1112} (18)
+
+\texttt{0123456789\cm{AAAAAAAA}BCDEF} $\to$ \texttt{10111213141516171819\cm{8A}1B1C1D1E1F} (32) \\
+
+\texttt{0123456789ABCDEF} $\to$ \texttt{101112131415161718191A1B1C1D1E1F} (32)
+
+\textterminblue{Увеличение объёма в~наихудшем случае "--- в~2~раза.}
+
+\textcolor{gray}{Длинные цепочки встречаются редко, поэтому поле $L$ обычно равно по длине символу $c$ (однобайтовое)}
+
+\pagebreak
+\setlength{\parskip}{1ex}
+
+\item 
+% Сжатые и~несжатые цепочки с~флаг-битом 
+Флаг-бит:
+$1 \leqslant L \leqslant 7$ (3 бита),
+$1 + 7 \sim \hex{1111 = F}, ~ 1+2 \sim \hex{1010 = A}
+% , ~ 1+3 \sim \hex{1011 = B}
+$
+% , порядок $(L, c)$ важен
+
+% неоднозначность разбиения: 
+% \texttt{AAAAAAAAAAAAAAAABB} $\to$ 
+
+$\hex{AAAAAAAAAAAAAAAABB} 
+\to
+\left[\begin{array}{@{}l@{}}
+\texttt{\cm{AAAAAAA,}\,AAAAAAA,\,\cm{AABB}} \to \texttt{\cm{FA}FA\cm{\um{4}AABB}}~  (9)
+\\
+% \texttt{AAAAAAAAAAAAAAAABB} 
+\texttt{\cm{AAAAAAA,}\,AAAAAAA,\,\cm{AA,}\,{BB}} \to
+% \texttt{\cm{FA}FA\cm{2AA}{BB}} (9) или 
+\texttt{\cm{FA}FA\cm{AA}{AB}} ~ (8)
+\end{array}\right.$
+
+% % % но \texttt{AABBAA} НЕ компактнее как \texttt{\um{6}AABBAA} (7), чем как \texttt{AAABAA}
+
+но 
+$\hex{AABCDDEF0012} 
+\to
+\left[\begin{array}{@{}l@{}}
+\texttt{AABCDDE, F0012} \to \texttt{\um{7}AABCDDE\um{5}F0012} ~ (14)
+\\
+\texttt{\cm{AA,}\,BC,\,\cm{DD,}\,EF,\,\cm{00,}\,12} \to \texttt{\cm{AA}\um{2}BC\cm{AD}\um{2}EF\cm{A0}\um{2}12} ~ (15)
+\end{array}\right.$
+
+
+
+\texttt{0123456789\cm{AAAAAAAA}BCDEF} $\to$ \texttt{0123456, 789, \cm{AAAAAAA}, \cm{A}BCDEF} $\to$ \\
+$\to$\texttt{\um{7}0123456\um{3}789\cm{FA}\um{6}ABCDEF} (21)
+% \textterminblue{(для октетов ув.\,в~нх.\,сл. на $\frac{1}{127}$)}
+
+\texttt{0123456789ABCDEF} $\to$ \texttt{0123456, 789ABCD, EF} $\to$ \texttt{\um{7}0123456\um{7}789ABCD\um{2}EF} (19)
+
+\textcolor{gray}{здесь порядок полей $(L, c)$  важен: иначе не декодируются несжатые цепочки}
+
+\textterminblue{Увеличение объёма в~наихудшем случае "--- для байта-тетрады на $\frac{1}{7}$ объёма файла (к~каждым семи символам добавляется восьмой "--- флаг-бит + $L$), 
+\\для байта-октета "--- на $\frac{1}{127}$ (менее процента).}
+
+% \medskip
+\pagebreak
+\setlength{\parskip}{0ex}
+
+\item Префикс в~несжатом тексте, $p=\hex{E}$:
+\hfill
+\texttt{\cm{AAAAAAAAAAAAAAA}ABB} $\to$ \texttt{\cm{EFA}ABB} (6) 
+
+\textcolor{gray}{Два варианта кодирования одиночного символа $p$:
+$1\times p
+\to
+\left[\begin{array}{@{}l@{}}
+(p, 1, p)
+\\
+(p, 0)
+\end{array}\right.$}
+
+
+% \texttt{0123456789\cm{AAAAAAAA}BCD\cm{E}F} (23) 
+% $\to$ \texttt{0123456789\cm{E8A}BCD\cm{E1E}F} \rlap{(20)}
+% или~\texttt{0123456789\cm{E8A}BCD\cm{E0}F} (19) 
+$\hex{0123456789\cm{AAAAAAAA}BCD\cm{E}F} 
+\to
+\left[\begin{array}{@{}l@{}}
+\hex{0123456789\cm{E8A}BCD\cm{E1E}F}~  (20)
+\\
+\hex{0123456789\cm{E8A}BCD\cm{E0}F} ~ (19) \textcolor{gray}{ ~~ L \neq 0}
+\end{array}\right.$
+
+\textcolor{gray}{но только один "--- для двойного $p$:  $\hex{\ldots D\cm{EE}F} \to \hex{\ldots D\cm{E2E}F}$ (а~не $\hex{\ldots D\cm{E0E0}F}$).}
+\\
+\textcolor{gray}{Если \hex{E1E}, то допустимо и~$(p, L, c) \sim \hex{E1E/E8A}$, и~$(p, c, L) \sim \hex{EE1/EA8}.$\\
+Но если мы хотим \hex{E0}, то только $(p, L, c)$.}
+
+
+% Далее одиночное 
+
+$\hex{0123456789ABCD\cm{E}F} 
+\to
+\left[\begin{array}{@{}l@{}}
+\hex{0123456789ABCD\cm{E1E}F} ~ (18)
+\\
+\hex{0123456789ABCD\cm{E0}F} ~ (17) 
+\end{array}\right.$ 
+% (одиночное вхождение) 
+
+% но %двойное 
+% $\hex{\ldots D\cm{EE}F} \to \hex{\ldots D\cm{E2E}F}$ (а~не $\hex{\ldots D\cm{E0E0}F}$)
+
+% \textcolor{gray}{
+% % $L=0$ невозможно $\Rightarrow$ 
+% $(p, L, c)$ не может быть $(p, 0, c)$ $\Rightarrow$ одиночное $p$ можно записать как $(p, 0)$}
+
+% \rlap{\textterminblue{(для октетов ув.\,в~нх.\,сл. на $\frac{2}{256}$ или $\frac{1}{256}$)}}
+
+% \textcolor{gray}{Если \hex{E1E}, а~не \hex{E0}, то допустимо и~$(p, L, c) \sim \hex{E1E/E8A}$, и~$(p, c, L) \sim \hex{EE1/EA8}$}
+
+\textterminblue{
+% Увеличение объёма в~наихудшем случае (экранирование одиночных $p$) "--- \\
+% при $(p, 0)$ на $\nu(p)$ от объёма файла,
+% % (к~каждому $p$ дописывается ещё один символ),
+% при $(p, 1, p)$ "--- на $2\cdot \nu(p)$,
+% % (к~каждому $p$ дописывается два символа),
+Увеличение объёма в~наихудшем случае (все символы одиночные)
+при $(p, 0)$ "--- на $\nu(p)$ от~объёма файла,
+где  $\nu(p)$ "--- частота $p$:
+для байта-тетрады $\nu(p) \leqslant \frac{1}{16}$, 
+для~байта-октета $\nu(p) \leqslant \frac{1}{256} < 0,4\%$ \mbox{($p$ "--- самый редкий символ).}
+
+% То есть увеличение объёма в~наихудшем случае для байта-октета при $1\times p \to (p, 0)$ не превышает $\frac{1}{256}$ объёма файла (менее 0,4\%).
+}
+
+\end{enumerate}
+
+\end{adjustwidth}
+\end{frame}
+
+
+
+\subsection{Коррекция длины}
+\begin{frame}{\insertsubsection}
+\begin{adjustwidth}{-1.0em}{-1.8em}
+\footnotesize
+\setlength{\parskip}{0.5\parskip}
+
+Максимальная длина $L$ определяется разрядностью поля (обычно байта),  минимальная "--- алгоритмом:
+
+% Для $N$-битного байта:
+
+% \begin{tabularx}{\linewidth}{@{}p{4em}p{6em}LL@{}}
+% Байт&Наивный & Флаг-бит & Префикс \\\hline
+% % До\-пус\-ти\-мые 
+% $N$ бит
+% & $1 \leqslant L < 2^N$ & $3 \leqslant L < 2^{N-1}$ (сж) $1 \leqslant L < 2^{N-1}$ (н/сж) & $4 \leqslant L < 2^N$ $(c\neq p)$ $1 \leqslant L < 2^N$ $(c= p)$ \\\hline
+% 4 бита & $1 \leqslant L \leqslant 15$& $3 \leqslant L \leqslant 7$ (сж) $1 \leqslant L \leqslant 7$ (н/сж) & $4 \leqslant L \leqslant 15$ $(c\neq p)$ $1 \leqslant L \leqslant 15$ $(c= p)$ \\\hline
+% 8 бит & $1 \leqslant L \leqslant 255$& $3 \leqslant L \leqslant 127$ (сж) $1 \leqslant L \leqslant 127$ (н/сж) & $4 \leqslant L \leqslant 255$ $(c\neq p)$ $1 \leqslant L \leqslant 255$ $(c= p)$ \\\hline\\[-2ex]
+% % \\
+% % Не исп-ся   & $0$ & $0+0, 1+0, 1+1$
+% \multicolumn{4}{c}{Коррекция: вместо $L$ записывается $\widetilde{L} = L - \min{L}$}\\\hline
+% 4 бита & $1 \leqslant L \leqslant 16$& $3 \leqslant L \leqslant 10$ (сж) $1 \leqslant L \leqslant 8$ (н/сж) & $4 \leqslant L \leqslant 19$ $(c\neq p)$ $1 \leqslant L \leqslant 16$ $(c= p)$ \\[-1ex]
+% &\color{gray} $0 \leqslant \widetilde{L} \leqslant 15$&\color{gray} $0 \leqslant \widetilde{L} \leqslant 7$&\color{gray} $0 \leqslant \widetilde{L} \leqslant 15$ \\\hline
+% \end{tabularx}
+
+\begin{tabularx}{\linewidth}{@{}p{4em}p{6em}LL@{}}
+Байт&Наивный & Флаг-бит & Префикс \\\hline
+% До\-пус\-ти\-мые 
+$N$ бит
+& $1 \leqslant L < 2^N$ & $3 \leqslant L < 2^{N-1}$ (сж) $1 \leqslant L < 2^{N-1}$ (н/сж) & $4 \leqslant L < 2^N$ $(c\neq p)$ $2 \leqslant L < 2^N$ $(c= p)$ \\\hline
+4 бита & $1 \leqslant L \leqslant 15$& $3 \leqslant L \leqslant 7$ (сж) $1 \leqslant L \leqslant 7$ (н/сж) & $4 \leqslant L \leqslant 15$ $(c\neq p)$ $2 \leqslant L \leqslant 15$ $(c= p)$ \\\hline
+8 бит & $1 \leqslant L \leqslant 255$& $3 \leqslant L \leqslant 127$ (сж) $1 \leqslant L \leqslant 127$ (н/сж) & $4 \leqslant L \leqslant 255$ $(c\neq p)$ $2 \leqslant L \leqslant 255$ $(c= p)$ \\\hline\\[-2ex]
+% \\
+% Не исп-ся   & $0$ & $0+0, 1+0, 1+1$
+\multicolumn{4}{c}{Коррекция: вместо $L$ записывается $\widetilde{L} = L - \min{L}$}\\\hline
+4 бита & $1 \leqslant L \leqslant 16$& $3 \leqslant L \leqslant 10$ (сж) $1 \leqslant L \leqslant 8$ (н/сж) & $4 \leqslant L \leqslant 16$ $(c\neq p)$ $2 \leqslant L \leqslant 16$ $(c= p)$ \\[-1ex]
+&\color{gray} $0 \leqslant \widetilde{L} \leqslant 15$&\color{gray} $0 \leqslant \widetilde{L} \leqslant 7$&\color{gray} $1 \leqslant \widetilde{L} \leqslant 15$ \\\hline
+\end{tabularx}
+
+Цепочки с~коррекцией $L$ длиннее $\Rightarrow$ их количество в~файле меньше $\Rightarrow$ файл после кодирования короче.
+
+\end{adjustwidth}
+\end{frame}
+
+
+
+
+\subsection{Сравнение (с~коррекцией длины)}
+\begin{frame}{\insertsubsection}
+\begin{adjustwidth}{-0.8em}{-2.em}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+% \setlength{\leftmargini}{-1ex}
+\setlength{\leftmarginii}{1ex}
+\setlength{\parskip}{0.\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+
+
+\begin{enumerate}
+\item Наивный: $\forall L: ~L\times c \to (L-1, c)$
+
+\texttt{\cm{AAAAAAAAAAAAAAAA}{BB}} $\to 16\times\hex{A},\,2\times\hex{B} \to$ \texttt{\cm{FA}{1B}} (4)
+
+\medskip
+
+\item Флаг-бит: $\left\{\begin{array}{@{}rcl@{}}
+L\times c, L \geqslant 3 &\to& \Big(1+(L-3), c\Big), \\
+c_1\ldots c_L, L \geqslant 1 &\to& \Big(0+(L-1), c_1\ldots c_L\Big).
+\end{array}\right.$
+
+
+$\hex{AAAAAAAAAAAAAAAABB} 
+% \to \texttt{\cm{AAAAAAAAAA,}\,AAAAAA,\,\cm{BB}} 
+\to 10\times\hex{A},\,6\times\hex{A},\,\hex{BB} 
+\to \hex{\cm{FA}BA\cm{{1}BB}}~  (7)
+$
+
+\texttt{0123456789\cm{AAAAAAAA}BCDEF} $\to$ \texttt{01234567, 89, \cm{AAAAAAAA}, BCDEF} $\to$ \\
+$\to$\texttt{\um{7}01234567\um{1}89\cm{DA}\um{4}BCDEF} (20)
+% \textterminblue{(для октетов ув.\,в~нх.\,сл. на $\frac{1}{128}$)}
+
+\texttt{0123456789ABCDEF} $\to$ \texttt{01234567, 89ABCDEF} $\to$ \texttt{\um{7}01234567\um{7}89ABCDEF} (18)
+
+
+\medskip
+
+\item Префикс:
+% $\left\{\begin{array}{@{}l@{}}
+% L\times c, c \neq p \to (p, c, L-4) \\
+% L\times p \to (p, p, L-1), \\
+% \end{array}\right.$
+% 
+% % 
+% \textcolor{gray}{Здесь именно $(p, c, L-x)$: порядок $(p, L-x, c)$ неудобен, так как $x$~определяется по $c$.
+% Замена $1\times p \to (p, 0)$ \emph{недопустима,} так как и~$c$, и~$\widetilde{L} = L - \min{L}$ могут быть нулевыми.
+% }
+% 
+% \texttt{\cm{AAAAAAAAAAAAAAAA}BB}  $\to 16\times\hex{A},\,\hex{BB} \to$  \texttt{\cm{EAC}BB} (5) 
+% 
+% $\hex{0123456789\cm{AAAAAAAA}BCD\cm{E}F} 
+% \to \hex{0123456789\cm{EA4}BCD\cm{EE0}F}~  (20)
+% $
+% 
+% $\hex{0123456789ABCD\cm{E}F} 
+% \to \hex{0123456789ABCD\cm{EE0}F} ~ (18)
+% $ 
+% 
+% 
+$\left\{\begin{array}{@{}lll@{}}
+L\times c, c \neq p, L \geqslant 4 &\to& (p,~~ L-1,~~ c) \\
+L\times p, L \geqslant 2 &\to& (p,~~ L-1,~~ p), ~~\textcolor{gray}{L-1 \neq 0}\\
+1\times p &\to& (p, 0), \\
+\end{array}\right.$
+
+\texttt{\cm{AAAAAAAAAAAAAAAA}BB}  $\to 16\times\hex{A},\,\hex{BB} \to$  \texttt{\cm{EFC}BB} (5) 
+
+$\hex{0123456789\cm{AAAAAAAA}BCD\cm{E}F} 
+\to \hex{0123456789\cm{E74}BCD\cm{E0}F}~  (19)
+$
+
+$\hex{0123456789ABCD\cm{E}F} 
+\to \hex{0123456789ABCD\cm{E0}F} ~ (17)
+$ 
+
+\end{enumerate}
+
+\end{adjustwidth}
+\end{frame}
+
+
+% LZ77 и LZ1 — синонимы
+% http://patft1.uspto.gov/netacgi/nph-Parser?Sect1=PTO2&Sect2=HITOFF&p=1&u=%2Fnetahtml%2FPTO%2Fsearch-bool.html&r=1&f=G&l=50&co1=AND&d=PTXT&s1=5532693.PN.&OS=PN/5532693&RS=PN/5532693
+% \subsection{Код Зива"--~Лемпеля LZ77}
+\section{Код Зива--Лемпеля, LZ77/LZ1}
+\subsection{Концепция LZ77}
+\begin{frame}{\insertsection}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+
+
+1977 г., Якоб Зив (Jacob Ziv) и Абрахам Лемпель (Abraham Lempel):
+если цепочка символов (не обязательно одинаковых) встречается более одного раза, то 
+каждое {следующее вхождение цепочки заменяются ссылкой на предыдущее;}\\
+ссылка состоит из~относительного смещения $S \geqslant 1$ и~длины $L$ цепочки \termin{в~несжатом тексте:} \rlap{$(S, L)$}
+\smallskip
+
+\textcolor{gray}{Поиск предыдущего вхождения "--- основная сложность алгоритмов семейства LZ77 и~неоднозначность кодирования.}
+
+\textcolor{gray}{Алгоритм LZSS (реализация LZ77) "--- дерево для ускорения поиска.}
+
+\smallskip
+
+\termin{Скользящее окно:} область перед текущей позицией кодирования, в~которой можем искать и~адресовать ($w \leqslant \max(S)$) ссылки
+
+
+% \hrulefill
+
+Если $S$ записывается 
+% одним байтом ($n$ различных значений), 
+$N$ битами,
+то~максимальный размер окна 
+% $w = \max(S) = n-1$.
+$w = \max(S) = 2^N-1$.
+
+% Таким образом, словарём является окно "--- бл.
+
+% \medskip
+% 
+% Наихудший случай (для 4-битного байта):
+% 
+% \texttt{\color{gray} 0123456789ABCDEF0123456789ABCDEF}...
+% 
+% в~пределах окна нет ни одного совпадения.
+% 
+% \medskip
+% 
+% Увеличить размер окна $w$ можно, записывая $S$ двумя байтами.
+
+% \begin{enumerate}
+% 
+% \item 
+
+
+% \item Несжатые символы и~сжатые цепочки
+
+% \end{enumerate}
+
+\end{frame}
+
+% \subsection{Пример №1}
+% \begin{frame}{\insertsubsection}
+\begin{frame}[plain]
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.5\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+% 
+% там корабли лавировали, лавировали, да не вылавировали
+
+\textcolor{gray}{Alternative vexillum codicis inf. interpretatio (AVCII):}
+% 
+\begin{tabular}{@{}l@{}}
+\texttt{\textvisiblespace,абвдеиклмнорты}\\
+\texttt{0123456789ABCDEF}
+\end{tabular}
+% \medskip
+
+% \colorlet{clOddD}{gray!50}
+% \colorlet{clEvnD}{olive!50}
+% 
+% \colorlet{clOddX}{gray}
+% \colorlet{clEvnX}{olive}
+% 
+% \begin{tabular}{@{}l@{}}
+% \texttt{\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123}}\\[-1ex]
+% \texttt{\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{0123456789ABCDEF}\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{012345}}\\[-1ex]
+% \texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,{\textvisiblespace}лавировали,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вылавировали}\\
+% \end{tabular}
+
+% \texttt{0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345}\\
+\texttt{01234567890\cm{123456789012}\ctm{3}\textterminblue{456789012345}678901234567890123}\\
+\texttt{там{\textvisiblespace}корабли\cm{{\textvisiblespace}лавировали,}\ctm{{\textvisiblespace}}\textterminblue{лавировали,{\textvisiblespace}}да{\textvisiblespace}не{\textvisiblespace}вылавировали}\\
+$\left\{\begin{array}{@{}l@{}}
+S_1=23-11=12 = \hex{C}, \\
+L_1 = 13 = \hex{D}
+\end{array}\right.$ 
+% "--- кодирование 4-битными байтами \rlap{возможно}
+\textcolor{gray}{"--- пробел №23 принадлежит обеим цепочкам}
+% \medskip
+
+{
+% color{gray}
+
+\texttt{012345678901234567890123\cm{4567890123}4567890123\textterminblue{4567890123}}\\
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,{\textvisiblespace}\cm{лавировали},{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вы\textterminblue{лавировали}}
+$\left\{\begin{array}{@{}l@{}}
+S_2=44-24 = 20 > 15 = \hex{F}, \\
+L_2 = 10 = \hex{A}
+\end{array}\right.$ 
+% \medskip
+% 
+% $p=\digitF = \text{ы}; ~~~ S_1=23-11=12, ~ L_1 = 13; ~~~ S_2=20 > \digitF$
+% 
+% \texttt{там корабли лавировали,\cm{ыCD}да не в\cm{ы0}лавировали} ($L$)\\
+% \texttt{там корабли лавировали,\cm{ыCA}да не в\cm{ы0}лавировали} ($L-3$)
+% 
+% \\$S_2=20 > \digitF$ "--- кодирование 4-битным байтом {невозможно}
+}
+
+Простейший вариант кодирования "--- $S$ и~$L$ по одному байту, тогда $1 \leqslant S \leqslant 15$ и~$1 \leqslant L \leqslant 15$;
+максимальное окно  $w = \max{S} = 15$.
+
+% \begin{enumerate}
+% \item 
+При программной реализации (поиск только в~окне) 
+% это совпадение вообще не было бы найдено
+% для однобайтового $S$ и~$w = \max{S} = 15$
+будет найдено только одно совпадение: $(S_1, L_1)$.
+% \textcolor{gray}{"--- как увеличить окно?}
+% \\
+% \textcolor{lightgray}{$\downarrow$1) увеличение разрядности $S$, ~~ $\downarrow\downarrow$2) коррекция $S \to S-1$.}
+Возможен случай, когда 
+адресуемых повторов вообще нет, даже односимвольных
+% (независимо от разрядности символа).
+\textcolor{gray}{"--- как увеличить $\max{S}$?}
+% .
+% в~пределах окна нет ни одного повтора, даже односимвольного $\Rightarrow$ желательно увеличить окно $\Rightarrow$ увеличить разрядность $S$.
+
+% \item 
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,$(S_1, L_1)$да{\textvisiblespace}не{\textvisiblespace}вылавировали}  \\{$(S_1, L_1)=\hex{CD}=\text{\tt ор}$}
+\textcolor{gray}{"--- как отличить ссылку от текста?}
+
+% \end{enumerate}
+
+% \vspace{-\baselineskip}
+\end{frame}
+
+
+% \subsection{Пример №2, Михаил Быстрянцев}
+% \begin{frame}{\insertsubsection}
+% \begin{adjustwidth}{-1.0em}{-1.8em}
+% \tt
+% \scriptsize\setlength{\parskip}{\medskipamount} 
+% 
+% The compression and the decompression leave an impression. Hahahahaha!
+% 
+% The compression and t[he ]de[compression ]leave[ an] i[mpression]. Hah[ahahaha]!
+% 
+% \includegraphics[width=1\linewidth,valign=t]{02_lz77_words}
+% 
+% \textcolor{gray}{Оригинал и~повтор строки \texttt{ahahaha} сильно перекрываются $\uparrow$}
+% 
+% {\normalfont\usebeamercolor[fg]{structure}
+% Абсолютные ссылки $(P, L)$, где $P$ "--- позиция первого вхождения цепочки, $L$ "--- её длина:
+% }
+% 
+% The compression and t$(2, 3)$de$(5, 12)$leave$(16, 3)$ i$(8, 7)$. Hah$(61, 7)$!
+% 
+% {\normalfont\usebeamercolor[fg]{structure}
+% Замена абсолютных позиций $P$ на относительные смещения $S$:
+% }
+% 
+% The compression and t$(20, 3)$de$(22, 12)$leave$(28, 3)$ i$(42, 7)$. Hah$(2, 7)$!
+% 
+% \bigskip
+% 
+% \normalfont\normalsize
+% 
+% Как отделить несжатый текст от ссылок?
+% 
+% % \textterminblue{\normalfont 
+% % Кодирование несжатого текста и~ссылок $(S, L)$. 
+% % 
+% % Быстрянцев:  символы и~цепочки группируются по 8, предваряемых байтом-флагами:
+% % 
+% % }
+% 
+% \end{adjustwidth}
+% \end{frame}
+
+
+
+
+\subsection{Основные варианты кодирования LZ77}
+\begin{frame}{\insertsubsection}
+\begin{adjustwidth}{-1.5em}{-1.5em}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+
+
+\begin{enumerate}
+
+
+\item Наивный %(концепт Зива"---Лемпеля) 
+% конкретной структуры данных в~статье не описано!
+% LZ1 ? Белл? (см.  Text compression Timothy C Bell, John G Cleary, I H Witten)
+"---
+ссылки чередуются с~несжатыми символами:
+цепочка, за~которой следует $c$ "--- тройка $(S, L, c)$, несжатый символ $c$ "--- тройка $(0, 0, c)$.
+% \textterminblue{"--- увеличение объёма в~наихудшем случае втрое}
+
+% Таким образом, $0 \leqslant S \leqslant w, L \geqslant 0$ "--- коррекция невозможна.
+При~необходимости текст дополняется (обычно нулями)
+
+% {\scriptsize\color{gray}
+% 
+% \texttt{%
+% 0123456789ABCDEF01234... $\to$
+% 000001002003004005006007008...}
+% 
+% }
+
+\medskip
+ 
+\begingroup
+\color{gray}
+
+\item Новопримитивный: ссылка $(L, S)$, несжатый символ $c$ как $(0, c)$.
+% "---
+% % \textterminblue{увеличение объёма в~нх.\,сл. вдвое,} 
+% возможен только для $|L|=|c|$.
+
+
+% {\scriptsize
+% \textcolor{gray}{\texttt{%
+% 0123456789ABCDEF0123456789ABCDEF $\to$ {\normalfont(окно $w = \max(S) = 15 = \hex{F}$)}
+% 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F}}
+% 
+% }
+\endgroup
+
+\medskip
+
+\item LZSS (Сторер, Сжимански): флаг-бит $+$ символ $c$/ссылка~$(S, L)$.
+
+\medskip
+
+
+\item Флаг-байт:  символы $c$ и~ссылки $(S, L)$ группируются по 8 (по~числу бит в~байте-октете) штук, 
+каждая группа предваряется байтом, где~каждый бит показывает тип соответствующего объекта:
+$\left\{\begin{array}{@{}ll@{}}
+0, & \text{несжатый символ "--- байт $c$}\\
+1, & \text{ссылка "--- два байта $(S, L), 0< S \leqslant w, L \geqslant 3$}
+\end{array}\right.$ 
+
+\textcolor{gray}{для байта-тетрады группируется, соответственно, по 4~объекта}
+% {%
+% % \scriptsize
+% \color{gray}
+% \begin{tabularx}{\linewidth}{@{}LK{0.4\linewidth}@{}}
+% \begin{tabular}{@{}>{\tt}l@{}>{\tt}c@{}>{\tt}ll@{}}
+% The{\textvisiblespace}c&o        &mp& 0b\,0000\,0000~The comp\\
+% ressi&o        &n{\textvisiblespace}& 0b\,0000\,0000~ression\\
+% and{\textvisiblespace}t&$(20, 3)$&de& 0b\,0000\,0100~and t\framebox{20}\framebox{03}de\\
+% \end{tabular}
+% &
+% \vspace*{-1.5\baselineskip}
+% \textterminblue{"--- увеличение объёма в~наихудшем случае на $\frac{1}{8}$}
+% \end{tabularx}
+% }
+
+
+
+\medskip
+
+\item Префикс $p$ как маркер ссылки: 
+% $(p, S, L), ~ 0< S \leqslant w, L > 3; ~ p \to (p, 0)$\\
+$\left\{\begin{array}{@{}l@{}}
+\text{ссылка}~(p, S, L): ~ 0< S \leqslant w, L \geqslant 4, \\
+\text{символ}~p \to (p, 0)
+\end{array}\right.$
+% \\
+% \textterminblue{"--- увеличение объёма в~наихудшем случае на $\frac{1}{256}$}
+
+% {%
+% \color{gray}
+% 
+% $p=\hex{F} = \text{ы}; ~~~ S_1=12=\hex{C}, ~ L_1 = 13=\hex{D}$
+% 
+% \texttt{там корабли лавировали,\cm{ыCD}да не в\cm{ы0}лавировали} \rlap{($L$ без коррекции)}\\
+% \texttt{там корабли лавировали,\cm{ыC9}да не в\cm{ы0}лавировали} ($L \to L-4$)
+% 
+% }
+
+\end{enumerate}
+
+\end{adjustwidth}
+\end{frame}
+
+
+
+\begin{frame}[plain]
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.3\parskip}
+
+% \setlength{\digitwidth}{\widthof{$0$}}
+% \setlength{\digitheight}{\heightof{$0$}}
+% 
+% там корабли лавировали, лавировали, да не вылавировали
+
+\textcolor{gray}{\begin{tabular}{@{}l@{}}
+\texttt{\textvisiblespace,абвдеиклмнорты}\\
+\texttt{0123456789ABCDEF}
+\end{tabular}}
+$|S|=|L|=|c|$, окно $w=15$ символов (макс.)
+
+\colorlet{clOddD}{gray}
+\colorlet{clEvnD}{olive}
+
+\colorlet{clOddX}{gray!50}
+\colorlet{clEvnX}{olive!50}
+
+\begin{tabular}{@{}l@{}}
+\texttt{\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{0123456789ABCDEF}\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{012345}}\\[-1ex]
+\texttt{\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123}}\\[-1ex]
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,\cm{{\textvisiblespace}лавировали,{\textvisiblespace}}да{\textvisiblespace}не{\textvisiblespace}вылавировали} (54)\\
+\end{tabular}
+
+\begin{enumerate}
+\item Наивный: 
+\texttt{00т00а00м00{\textvisiblespace}00к00о00р610б00л00и81л61в51рC1вC1лB1, \cm{CD}дC1{\textvisiblespace}00н00е61в00ыC1а41и00р00о81а81и} (84)
+
+\textcolor{gray}{Порядок полей допустим любой "--- и~$(S, L)$, и~$(L, S)$ "--- здесь $(S, L)$.}
+
+
+\item Новопримитивный: 
+\texttt{0т0а0м0{\textvisiblespace}0к0о0р0а0б0л0и0{\textvisiblespace}0л0а0в0и0р0о0в0а0 2B0,\cm{DC}0д0а0{\textvisiblespace}0н0е0{\textvisiblespace}0в0ы0л0а0в0и0р0о0в0а0л0и} (82)\textcolor{gray}{, \hfill только $(L, S)$}
+
+
+\item Флаг-байт:
+\texttt{\um{0}там{\textvisiblespace}\um{0}кора\um{0}бли{\textvisiblespace}\um{0}лави\um{0}рова\um{8}ли,\cm{CD}\um{0}да{\textvisiblespace}н\um{0}е{\textvisiblespace}вы\um{0}лави \um{0}рова\um{0}ли00} (55)
+% \textterminblue{"--- увеличение объёма в~наихудшем случае на $\frac{1}{4}$}
+\hfill
+\textcolor{gray}{Допустимы и~$(S, L)$, и~$(L, S)$ "--- в~статье SS $(S, L)$.}
+
+
+
+\item Префикс
+$p=\hex{F} = \text{ы}
+% ; ~~~ S_1=12=\hex{C}, ~ L_1 = 13=\hex{D}
+$:
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,\cm{ыCD}да{\textvisiblespace}не{\textvisiblespace}в\cm{ы0}лавировали} (45)
+
+% \textcolor{gray}{Для $(p, S, L)$ символ $p$ экранируется значением $S=0$,
+% для $(p, L, S)$ "--- значением $L=0$; при $|S|=|L|=|c|$ и~без коррекции $L$ допустим любой порядок; здесь $(p, S, L)$}
+
+% \textcolor{gray}{Конкретно при $|S|=|L|=|c|$ и~без коррекции $L$ допустимы и~$(p, S, L)$,
+% и~$(p, L, S)$ "--- здесь $(p, S, L)$, "--- но в~общем случае
+% % допустим только один вариант.
+% нет.}
+
+\textcolor{gray}{
+Префикс $p$ "--- в~начале.
+Разный порядок полей $S$ и~$L$
+приводит к~разным способам экранирования символа $p$.
+Здесь $(p, S, L)$.}
+
+\end{enumerate}
+
+
+% При односимвольных $S$ и~$L$ возможен случай, когда 
+% адресуемых повторов вообще нет (независимо от разрядности символа).
+% % , даже односимвольных.
+% % в~пределах окна нет ни одного повтора, даже односимвольного $\Rightarrow$ желательно увеличить окно $\Rightarrow$ увеличить разрядность $S$.
+
+\end{frame}
+
+
+
+\subsection{Увеличение разрядности $S$}
+\begin{frame}{\insertsubsection}
+% \begin{adjustwidth}{-1.5em}{-1.5em}
+\footnotesize
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+% \setlength{\parskip}{0.\parskip}
+
+
+
+\begin{enumerate}
+
+\item Записывать $S$ двумя байтами.
+% : пара $(S, L)$ записывается тремя символами $(\lo S, \hi S, L)$.
+Для байта-тетрады $S \leqslant 2^8-1 = 255$;
+для~байта-октета $S \leqslant 2^{16}-1 = 65\,535$, окно $w$ обычно дополнительно ограничивается ($w << \max S$) для ускорения поиска.
+
+
+% Для варианта с~префиксом ссылка $(S, L)$ записывается четырьмя символами, 
+Префикс: ссылка занимает 4 символа,
+тогда $L \geqslant 5$: 
+\begin{itemize}
+
+\item %либо
+% $(S, L) \to (p, \lo S, \hi S, L)$, а~символ $p$ 
+% % записывается тремя символами 
+% "--- $(p, 0, 0)$
+% (экранируется не~нулевым {символом,} а~{значением $S=0$});
+% 
+$\left\{\begin{array}{@{}l@{~\to~}l@{~}l@{}}
+\text{ссылка}~(S, L) & (p,  ~~ \lo S,  ~~ \hi S,  ~~ {L}), \\
+\text{символ}~p & (p, 0, 0), ~ \text{\color{gray}экранируется $S=0$}
+\end{array}\right.$
+
+\item %либо
+% % $(S, L) \to (p, L, \lo S, \hi S)$, а~$p \to (p, 0)$
+% % (экранируется $L=0$) 
+% $\left\{\begin{array}{@{}l@{~\to~}l@{~}l@{}}
+% \text{ссылка}~(S, L) & (p, L, \lo S, \hi S) \\
+% \text{символ}~p & (p, 0) & \text{\color{gray}экранируется $L=0$}
+% \end{array}\right.$
+% 
+% "--- в~этом случае либо $L$ не~корректируется, либо 
+% % корректируется так, чтобы $0$ не был допустимым значением
+% $\widetilde{L} = L-4$ ($\widetilde{L} \neq 0$).
+% 
+$\left\{\begin{array}{@{}l@{~\to~}l@{~}l@{}}
+\text{ссылка}~(S, L) & (p,  ~~ {L},  ~~ \lo S, ~~  \hi S),  \\
+\text{символ}~p & (p, 0), ~\text{\color{gray}экранируется $L=0$}
+\end{array}\right.$
+
+\end{itemize}
+
+\item Добавить к~$S$ бит за счёт поля $L$
+% , так, что пара $(S, L)$ записывается ровно двумя символами.
+(пара $(S, L)$ "--- ровно 2 символа).
+% Для байта-тетрады $S \leqslant %2^5-1 = 
+% 31$, $L \leqslant %2^3-1 = 
+% 7$;
+% для~байта-октета $S \leqslant 2^{9}-1 = 511$, $L \leqslant 2^7-1 = 127$.
+
+Префикс: ссылка занимает 3 символа,
+$L \geqslant 4$: 
+\begin{itemize}
+
+\item 
+$\left\{\begin{array}{@{}l@{~\to~}l@{~}l@{}}
+\text{ссылка}~(S, L) & (p, ~~ \lo S, ~~  \hi S+{L}),  \\
+\text{символ}~p & (p, 0, 0), ~\text{\color{gray}экранируется $S=0$}
+\end{array}\right.$
+
+\item 
+$\left\{\begin{array}{@{}l@{~\to~}l@{~}l@{}}
+\text{ссылка}~(S, L) &  \pmb{(p, ~~L + \hi S, ~~\lo S),}  \\
+\text{символ}~p & (p, 0), ~\text{\color{gray}экранируется $L=0$}
+\end{array}\right.$
+\end{itemize}
+
+\end{enumerate}
+
+% \end{adjustwidth}
+\end{frame}
+
+
+
+\subsection{Коррекция $S$ и~$L$}
+\begin{frame}{\insertsubsection}
+% \begin{adjustwidth}{-1.0em}{-1.8em}
+\footnotesize
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+
+\begin{enumerate}
+\item Наивный: $S \geqslant 0$,  $L \geqslant 0  \Rightarrow$  ни $S$, ни $L$ невозможно скорректировать.
+
+\medskip
+
+\textcolor{gray}{
+\item Флаг-байт: $S \geqslant 1$ всегда; если ссылка "--- $k$ символов, то $L \geqslant k+1$; значения $0$ не используются как специальные:
+% $\Rightarrow$
+% обе компоненты можно скорректировать, записывая:
+$\left\{\begin{array}{@{}c@{~}l@{~}l@{}}
+S &\to& \widetilde{S}=S-1, \\
+L &\to& \widetilde{L}=L-k-1. \\
+\end{array}\right.$
+}
+
+\medskip
+
+\item Префикс: $S \geqslant 1$ всегда; $L \geqslant k+1$ ($k$ "--- длина ссылки, включая \rlap{префикс):}
+\begin{itemize}
+
+\item если для экранирования символа-префикса используется $S=0$, корректируется~$L$: ~~ $L ~~\to~~ \widetilde{L}=L-k-1$
+~~
+\textcolor{gray}{$\Big(\widetilde{L} \geqslant 0\Big)$.}
+
+
+\item если для экранирования символа-префикса используется $L=0$, корректируются обе:
+$\left\{\begin{array}{@{}clll@{}}
+S &\to& \widetilde{S}=S-1 & \color{gray}\Big(\widetilde{S} \geqslant 0\Big), \\
+L &\to& \widetilde{L}=L-k & \color{gray}\Big(\widetilde{L} \geqslant 1\Big). \\
+\end{array}\right.$
+
+\end{itemize}
+
+\end{enumerate}
+
+% \end{adjustwidth}
+\end{frame}
+
+
+
+
+
+\begin{frame}[plain]
+\begin{adjustwidth}{-0.5em}{-1.8em}
+\footnotesize
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.3\parskip}
+
+% там корабли лавировали, лавировали, да не вылавировали
+
+% \textcolor{gray}{\begin{tabular}{@{}l@{}}
+% \texttt{\textvisiblespace,абвдеиклмнорты}\\
+% \texttt{0123456789ABCDEF}
+% \end{tabular}}
+\begin{tabular}{@{}l@{}}Увеличиваем $S$\\за счёт $L$:\end{tabular}
+% $\left|\widetilde{S}\right|=|c|+1$, 
+% $\left|\widetilde{L}\right|=|c|-1$, 
+$\left\{\begin{array}{@{}lll@{}}
+\left|\widetilde{S}\right|=|c|+1 : & 0 \leqslant \widetilde{S} \leqslant 31 \\
+\left|\widetilde{L}\right|=|c|-1 : & 1 \leqslant \widetilde{L} \leqslant 7
+\end{array}\right.$
+\textcolor{gray}{
+\hfill
+\begin{tabular}{@{}l@{}}
+для\\октета:
+\end{tabular}
+$\left\{\begin{array}{@{}l@{}}
+0 \leqslant \widetilde{S} \leqslant 511\\
+1 \leqslant \widetilde{L} \leqslant 127\\
+\end{array}\right.$}
+
+префикс $p=\hex{F} = \text{ы}$, 
+$\left\{\begin{array}{@{}l@{}}
+\text{ссылка $k=3$ символа $(p, ~~ \widetilde{L} + \hi \widetilde{S}, ~~ \lo \widetilde{S}), ~~ \widetilde{L} \geqslant 1$},\\
+p \to (p, 0),\\
+\end{array}\right.$
+\begin{tabular}{@{}l@{~}}
+максимальная\\коррекция:
+\end{tabular}
+$\left\{\begin{array}{@{}c@{~}l@{~}ll@{~}}
+\widetilde{S}&=&S-1: & 1 \leqslant S \leqslant 32, \\
+\widetilde{L}&=&L-k=L-3: & 4 \leqslant L \leqslant 10. \\
+\end{array}\right.$
+\textcolor{gray}{
+% Для байта-октета:
+% октет:
+\hfill
+\begin{tabular}{@{}l@{}}
+для\\октета:
+\end{tabular}
+$\left\{\begin{array}{@{}l@{}}
+1 \leqslant S \leqslant 512\\
+4 \leqslant L \leqslant 130\\
+\end{array}\right.$}
+окно $w=32$:
+% , \textcolor{gray}{ищем только повторы от $k+1=4$ символов:}
+
+
+\colorlet{clOddD}{gray}
+\colorlet{clEvnD}{olive}
+
+\colorlet{clOddX}{gray!50}
+\colorlet{clEvnX}{olive!50}
+
+% \begin{tabular}{@{}l@{}}
+% \texttt{\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{0123456789ABCDEF}\textcolor{clOddX}{0123456789ABCDEF}\textcolor{clEvnX}{012345}}\\[-1ex]
+% \texttt{\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123}}\\[-1ex]
+% \texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,{\textvisiblespace}лавировали,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вылавировали} (54)\\
+% \end{tabular}
+
+\texttt{там{\textvisiblespace}корабли\textterminblue{{\textvisiblespace}лавировал}и,\cm{{\textvisiblespace}лавировал}и,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вылавировали}\\
+$\left\{\begin{array}{@{}llllrllll@{}}
+S_1=12 &\to& \widetilde{S_1} = 11 &\sim& 0~1011\\
+L_1=10 &\to& \widetilde{L_1} = 7  &\sim& 111
+\end{array}\right.
+\to
+~\um{0}111 ~ 1011
+$ 
+
+
+
+
+\begin{tabular}{@{}l@{}}
+\texttt{\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123456789}\textcolor{clOddD}{0123456789}\textcolor{clEvnD}{0123}}\\[-1ex]
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}\textterminblue{лавировали},{\textvisiblespace}лавировали,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вы\cm{лавировали}}
+\end{tabular}
+\\
+$\left\{\begin{array}{@{}llllrllll@{}}
+S_2=44-12 = 32 &\to& \widetilde{S_2} = 31 &\sim& 1~1111\\
+L_2=10         &\to& \widetilde{L_2} = 7  &\sim& 111
+\end{array}\right.
+\to
+~\um{1}111 ~ 1011
+$ 
+
+\texttt{там{\textvisiblespace}корабли{\textvisiblespace}лавировали,\cm{ы7B}и,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}в{ы0}\cm{ыFB}} (41)
+
+% Если $p=\hex{D} = \text{р}$: 
+% \texttt{там{\textvisiblespace}ко\um{р0}абли{\textvisiblespace}лави\um{р0}овали,\cm{р7B}и,{\textvisiblespace}да{\textvisiblespace}не{\textvisiblespace}вы\cm{рFB}} (42)
+
+\smallskip
+
+\textcolor{gray}{
+\begin{tabular}{@{}l@{}}
+Для октета можно\\увеличить $S$ на два бита:
+\end{tabular}
+\hfill
+$\left\{\begin{array}{@{}c@{~\leqslant~}c@{~\leqslant~}c@{~}}
+0 & \widetilde{S} & 1023\\
+1 & \widetilde{L} & 63\\
+\end{array}\right.$
+\hfill$\Rightarrow$\hfill
+$\left\{\begin{array}{@{}c@{~\leqslant~}c@{~\leqslant~}c@{}}
+1 & S & 1024\\
+4 & L & 66\\
+\end{array}\right.$}
+
+\vspace*{-2\baselineskip}
+\end{adjustwidth}
+\end{frame}
+
+
+
+
+
+
+
+% \subsection{Основные варианты LZ77}
+% \begin{frame}{\insertsubsection}
+% \begin{adjustwidth}{-1.5em}{-1.5em}
+% \footnotesize
+% % \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% % \lstset{xleftmargin=1em,numbers=none}
+% % \lstset{lineskip=0.5ex}
+% % \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+% \setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+% \setlength{\leftmargini}{0ex}
+% \setlength{\leftmarginii}{3ex}
+% \setlength{\parskip}{0.\parskip}
+% 
+% \setlength{\digitwidth}{\widthof{$0$}}
+% \setlength{\digitheight}{\heightof{$0$}}
+% 
+% 
+% \begin{enumerate}
+% 
+% 
+% \item Несжатый символ $c$ как «ссылка» $(0, c)$ "---
+% \textterminblue{увеличение объёма в~нх.\,сл. вдвое}
+% 
+% % {\scriptsize
+% % \textcolor{gray}{\texttt{%
+% % 0123456789ABCDEF0123456789ABCDEF $\to$ {\normalfont(окно $w = \max(S) = 15 = \hex{F}$)}
+% % 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F}}
+% % 
+% % }
+% 
+% \medskip
+% 
+% 
+% \item Цепочка, за которой следует $c$ "--- тройка $(S, L, c)$, несжатый символ $c$ "--- тройка $(0, 0, c)$
+% \textterminblue{"--- увеличение объёма в~наихудшем случае втрое}
+% 
+% % {\scriptsize\color{gray}
+% % 
+% % \texttt{%
+% % 0123456789ABCDEF01234... $\to$
+% % 000001002003004005006007008...}
+% % 
+% % }
+% 
+% \medskip
+% 
+% 
+% 
+% \item Быстрянцев:  символы и~цепочки группируются по 8, \rlap{тип "--- байт-флаги:}
+% 
+% % \begin{tabular}{@{}ll@{}}
+% % The comp& 0b\,0000\,0000~The comp\\
+% % ression & 0b\,0000\,0000~ression\\
+% % and t$(20, 3)$de& 0b\,0000\,0100~and t\framebox{20}\framebox{03}de\\
+% % % % $(22, 12)$leave$(28, 3)$ \\
+% % % % i$(42, 7)$. Hah$(2, 7)$\\
+% % % % !
+% % ...
+% % \end{tabular}
+% {%
+% % \scriptsize
+% \color{gray}
+% \begin{tabularx}{\linewidth}{@{}LK{0.4\linewidth}@{}}
+% \begin{tabular}{@{}>{\tt}l@{}>{\tt}c@{}>{\tt}ll@{}}
+% The{\textvisiblespace}c&o        &mp& 0b\,0000\,0000~The comp\\
+% ressi&o        &n{\textvisiblespace}& 0b\,0000\,0000~ression\\
+% and{\textvisiblespace}t&$(20, 3)$&de& 0b\,0000\,0100~and t\framebox{20}\framebox{03}de\\
+% \end{tabular}
+% &
+% \vspace*{-1.5\baselineskip}
+% \textterminblue{"--- увеличение объёма в~наихудшем случае на $\frac{1}{8}$}
+% \end{tabularx}
+% }
+% 
+% \medskip
+% 
+% \item Префикс $p$ как маркер ссылки: 
+% % $(p, S, L), ~ 0< S \leqslant w, L > 3; ~ p \to (p, 0)$\\
+% $\left\{\begin{array}{@{}l@{}}
+% \text{ссылка}~(p, S, L): ~ 0< S \leqslant w, L \geqslant 4, \\
+% \text{символ}~p \to (p, 0)
+% \end{array}\right.$
+% \\
+% \textterminblue{"--- увеличение объёма в~наихудшем случае на $\frac{1}{256}$}
+% 
+% {%
+% \color{gray}
+% 
+% $p=\hex{F} = \text{ы}; ~~~ S_1=12=\hex{C}, ~ L_1 = 13=\hex{D}$
+% 
+% \texttt{там корабли лавировали,\cm{ыCD}да не в\cm{ы0}лавировали} \rlap{($L$ без коррекции)}\\
+% \texttt{там корабли лавировали,\cm{ыC9}да не в\cm{ы0}лавировали} ($L \to L-4$)
+% 
+% }
+% 
+% \end{enumerate}
+% 
+% \end{adjustwidth}
+% \end{frame}
+
+
+
+\section{Сравнение RLE и~LZ77}
+
+
+% \subsection{Сравнение с~RLE}
+
+
+% \begin{frame}{\insertsubsection}
+\begin{frame}{\insertsection}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+\setlength{\digitwidth}{\widthof{$0$}}
+\setlength{\digitheight}{\heightof{$0$}}
+
+
+Как RLE, так и~LZ77 не требуют отдельного словаря.
+
+
+\begin{enumerate}
+
+\item Повторение одинаковых символов: \hfill \textcolor{gray}{Префикс $p=\hex{E}$, без коррекции}
+
+RLE: $AAAAAAAA ~~\sim~~ 8\times A$\\
+\texttt{0123456789\cm{AAAAAAAA}BCD\cm{E}F} $\to$ \texttt{0123456789\cm{E8A}BCD\cm{E0}F}\hfill $23 \to 19$
+
+\medskip
+
+LZ77: $\lefteqn{\overbrace{\phantom{AAAAAAA}}~}A\!\underbrace{AAAAAAA} ~~\sim~~ A +(S=1, L=7)$
+\hfill \textcolor{gray}{Порядок $(p, L, S)$}\\
+\texttt{0123456789\textterminblue{A}\cm{AAAAAAA}BCD\cm{E}F} $\to$ \texttt{0123456789\textterminblue{A}\cm{E71}BCD\cm{E0}F}\hfill $23 \to 20$
+
+\medskip
+
+\item Повторение подстрок общего вида:
+
+RLE:\hfill $28 \to 24$\\
+\texttt{012345601234789\cm{AAAAAAAA}BCD\cm{E}F} $\to$ \texttt{012345601234789\cm{E8A}BCD\cm{E0}F}
+
+
+LZ77:\hfill $28 \to 23$\\
+\texttt{{01234}56\cm{01234}789\textterminblue{A}\cm{AAAAAAA}BCD\cm{E}F} $\to$ \texttt{0123456\cm{E57}789\textterminblue{A}\cm{E71}BCD\cm{E0}F}
+\end{enumerate}
+
+Для большинства файлов LZ77 эффективнее RLE.
+
+\end{frame}
+
+\makethanks
+
+
+\section{Семинар RLE/LZ77}
+
+\subsection{Задача №1}
+\begin{frame}{\insertsubsection}
+\setlength{\leftmargini}{0ex}
+
+\begin{enumerate}
+
+\item Рассчитать количество информации в~сообщении 
+% «$\underbrace{\text{ля-ля-ля-...-ля}}_{\text{80 раз}}\text{!}$»
+$C = \text{«}\underbrace{\text{ля-ля-ля-...-ля}}_{\text{80 раз}}\text{»}$
+(кодировка koi8-r)
+
+\item Закодировать сообщение $C$ алгоритмом LZ77
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}{Информация и~модели источника}
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+Заменяя вероятности символов на их оценки по модели $X$, получаем \termin{оценку} количества информации:
+% $I_M \geqslant I$
+\begin{enumerate}
+
+\item Без памяти, $A_1 = \{\text{л}, \text{я}, \text{-}\}$: 
+$I_1 = 2\cdot80\cdot\Big(-\log_2\big(\frac{80}{239}\big)\Big) + 79\cdot\Big(-\log_2\big(\frac{79}{239}\big)\Big) = 254,2 ~\text{бит} = 31,8 ~\text{байт}$
+
+\item Без памяти, $A_1 = \{\text{ля-}, \text{ля}\}$: 
+$I_2 = 79\cdot\Big(-\log_2\big(\frac{79}{80}\big)\Big) + 1\cdot\Big(-\log_2\big(\frac{1}{80}\big)\Big) = 7,6 ~\text{бит} = 0,9 ~\text{байт}$
+
+\item Маркова, $A_1 = \text{koi8-r}, N=3$ со следующими оценками \rlap{вероятностей:}
+\begin{tabularx}{0.9\linewidth}{@{}Ll@{}}
+$p(c_1=\text{л}) = p(c_2=\text{я}) = p(c_3=\text{-})  = \frac{1}{256}$,
+&$p(\text{-}|\text{-ля}) = \frac{79}{80}$,
+\\
+$p(\text{л}|\text{ля-}) = p(\text{я}|\text{я-л}) = 1$,
+&$p(eof|\text{-ля}) = \frac{1}{80}$: 
+\end{tabularx}
+
+\hspace*{-1.5em}\rlap{%
+$I_3 = 3\cdot\log_2{256} + 79\cdot\Big(-\log_2\big(\frac{79}{80}\big)\Big) + 1\cdot\Big(-\log_2\big(\frac{1}{80}\big)\Big) 
+= 31,6 ~\text{бит} = 3,9 ~\text{байт}$
+}
+
+% \item LZ77:
+% ля-$(p,3,237)$ "--- 6 байт
+
+\end{enumerate}
+
+\end{frame}
+
+
+% \section{Семинар RLE/LZ77}
+% \begin{frame}{\insertsection}
+
+\subsection{Задача №2}
+\begin{frame}{\insertsubsection}
+
+\footnotesize
+% \lstset{basicstyle=\ttfamily\footnotesize,aboveskip=0ex,belowskip=0ex}
+% \lstset{xleftmargin=1em,numbers=none}
+% \lstset{lineskip=0.5ex}
+% \setbeamertemplate{itemize/enumerate body begin}{\footnotesize\setlistspacing{1}{0ex}}
+\setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
+\setbeamertemplate{itemize/enumerate subbody begin}{\footnotesize}
+\setlength{\leftmargini}{0ex}
+\setlength{\leftmarginii}{3ex}
+\setlength{\parskip}{0.\parskip}
+
+Используя 4-битный байт, закодируйте:
+
+\begin{enumerate}
+
+% \item Сообщение (160 = 0xA0 символов) "--- LZ77:
+% 
+% {
+% \tt
+% 
+% \begin{tabular}{@{}ll@{}}
+% 000:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                косил косой косарь за косарь косой косой\\
+% 040:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                 ~заросли кокоса на косе — косилка на рел\\
+% 080:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                     ьсине окосела, клиренс косой, рессора, в\\
+% 120:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                     ~ссоре сеньор и сеньора 
+% \end{tabular}
+
+% \begin{tabular}{@{}ll@{}}
+% 000:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                косил косой косарь за косарь косой косой\\
+% 040:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                 ~заросли кокоса на косе — косилка на рел\\
+% 080:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                     ьсине окосела, клиренс косой, рессора, в\\
+% 120:&\textcolor{gray}{0123456789012345678901234567890123456789}\\
+% &                     ~ссоре сеньор и сеньора 
+% \end{tabular}
+
+% \hspace*{-1.8em}\begin{tabular}{@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|}\hline
+% 00&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &косил косой коса&рь косой косой з&аросли~кокоса на&~косе за косарь~\\\hline
+% 40&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &— косилка на рел&ьсине окосела, к&лиренс резко кос&ой, а рессора вр\\\hline
+% 80&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &азнос, в ссоре с&еньор и сеньора&&\\\hline
+% \end{tabular}
+
+% \hspace*{-1.8em}\begin{tabular}{@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|}\hline
+% 00&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &косил косой коса&рь за косарь кос&ой косой заросли&~кокоса на косе~\\\hline
+% 40&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &— косилка на рел&ьсине окосела, к&лиренс резко кос&ой, а рессора вр\\\hline
+% 80&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\
+%   &азнос, в ссоре с&еньор и сеньора&&\\\hline
+% \end{tabular}
+
+% \hspace*{-1.8em}\begin{tabular}{@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|}\hline
+%   &0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\\hline
+% 00&косил~косой~коса&рь~за~косарь~кос&ой~косой~заросли&~ельника~на~косе\\
+% 40&~—~косилка~на~ке&росине~окосела,~&клиренс~резко~ко&сой,~а~рессора~в\\
+% 80&разнос,~в~ссоре~&сеньор~и~сеньора&&\\\hline
+% \end{tabular}
+
+% \hspace*{-1.8em}\begin{tabular}{@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|}\hline
+%   &0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\\hline
+% 00&косил~косой~коса&рь~за~косарь~кос&ой~косой~заросли&~ельника~на~косе\\
+% 40&~—~косилка~на~ре&льсине~окосела,~&клиренс~резко~ко&сой,~а~рессора~в\\
+% 80&разнос,~в~ссоре~&сеньор~и~сеньора&&\\\hline
+% \end{tabular}
+% }
+% \textcolor{gray}{Alternative vexillum codicis inf. interpretatio (AVCII):}
+% % 
+% \begin{tabular}{@{}l@{}}
+% \texttt{ ,—авезийклнорсь}\\
+% \texttt{0123456789ABCDEF}
+% \end{tabular}
+
+
+\item Сообщение (64 = 0x40 символов) "--- LZ77:
+
+{
+\tt
+
+% echo -n "косил~косой~косарь~за~косарь~косой~косой~космеи~на~косе~при~осе." | sed 's/\(.\)/\L\1\n/g' | sort | uniq | nl
+
+\hspace*{-1.8em}\begin{tabular}{@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|@{}l@{}|}\hline
+  &0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF&0123456789ABCDEF\\\hline
+00&косил~косой~коса&рь~за~косарь~кос&ой~косой~космеи~&на~косе~при~осе.\\\hline
+\end{tabular}
+
+}
+
+% \textcolor{gray}{Alternative vexillum codicis inf. interpretatio (AVCII):}
+\textcolor{gray}{AVCII:}
+% 
+\begin{tabular}{@{}l|l@{}}
+код $i$   &\texttt{0123456789ABCDEF}\\
+$a_i$   &\texttt{~.аезийклмнопрсь}\\
+$\nu(a_i)$&\texttt{B1431338111C1392}\\
+\end{tabular}
+\medskip
+
+
+\hspace*{-1.8em}а) $S$ занимает 1 байт (4 бита); б) $S$ занимает 5 бит; в) $S$ занимает 2 байта.
+
+\bigskip
+
+\item 16-цветный рисунок $8\times 8$ "--- RLE, LZ77.
+
+\end{enumerate}
+
+
+\end{frame}
+
+
+
+\end{document}

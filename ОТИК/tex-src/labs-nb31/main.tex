@@ -1,0 +1,37 @@
+% \chapter{Лабораторный практикум ОТИК}
+% \label{sec:app:labs}
+\begingroup
+\input{\COMMONPATH/mixin/labchapter}
+
+% ? если номера главы нет, принудительно ставим
+\makeatletter
+\renewcommand\thesection{\thechapter\@arabic\c@section}
+\makeatother
+
+% \input{\ROOTPATH/labs/reglament}
+
+
+
+
+
+\labwork{Работа с файлами в C++}
+
+\label{lab_read_write}
+
+\purpose{
+1)~научиться создавать и~обрабатывать двоичные файлы на ЯВУ.
+}
+
+\begin{tasks}
+
+\item Напишите программу, которая читает заданный двоичный файл $X$, создаёт двоичный файл $Y$ с другим именем и~записывает в~$Y$ копию $X$.
+
+\end{tasks}
+
+
+
+
+
+
+\endgroup
+

@@ -98,6 +98,8 @@ namespace Lab1
 
         public string ToSolve(List<string> operators)
         {
+            stack.Clear();
+            //operators.Clear();
             string result = "";
             foreach (var item in operators)
             {

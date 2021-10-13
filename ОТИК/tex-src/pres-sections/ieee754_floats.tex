@@ -1,0 +1,128 @@
+
+\newcounter{risletter}
+\def\blackandwhiteschemas{0}
+\definecolor{blue(ncs)}{rgb}{0.0, 0.53, 0.74}
+\newcommand{\colorpairlet}[3]
+{
+  \ifthenelse{\equal{\blackandwhiteschemas}{1}}
+  {
+      \colorlet{cl#1Dark}{black}
+      \colorlet{cl#1Light}{white}
+  }
+  {
+      \colorlet{cl#1Dark}{#2}
+      \colorlet{clDark}{#2}
+      \colorlet{cl#1Light}{#3}
+  }
+}
+
+\colorpairlet{Memory}{blue(ncs)}{clDark!20!white}
+
+
+\subsection{Числа с~плавающей запятой (IEEE~754)}
+
+\tikzstyle{block}	= [text badly centered, minimum height=4ex, draw=black,  fill=clMemoryLight, solidchaincell]
+\tikzstyle{blabel}	= [scale=0.7]
+
+
+\newcommand{\real}[5][]
+{
+  \node[block, minimum width= 42 ex, on chain, #1]  (m)  {$#4$};
+  \node[block, minimum width= 18 ex, on chain]  (p) {$#3$};
+  \node[block, minimum width= 4 ex, on chain]  (s) {$#2$};
+  
+%     \node[left = 2ex of s] {\asbuk{risletter})\stepcounter{risletter}};
+    \node[right = 2ex of m] {$#5$};
+%   \tikzset{node distance=2ex}
+
+  \foreach \nd/\s/\e in {m/0/n-1, p/n/n+w-1}
+%   \foreach \nd/\s/\e in {\pmbits}
+  {
+    \node[below right = of \nd.south west, blabel, anchor=north west] (be) {$\mathstrut\e$};
+    \node[below left = of \nd.south east, blabel, anchor=north east] (bs) {$\mathstrut\s$};
+%   \coordinate[left =  of \nd.south east, label=below:$\mathstrut\s$] (bs);
+  };
+  \node[below = of s, blabel]  {$\mathstrut n+w$};
+}
+\setcounter{risletter}{1}
+
+
+\begingroup
+\setbeamerfont{frametitle}{size=\linespread{1.0}\normalsize}
+
+\begin{frame}{\insertsubsection}
+\begin{adjustwidth}{-1.5em}{-1.9em}
+\vspace*{-1.5\baselineskip}
+\resizebox{\linewidth}{!}
+{
+\begin{tikzpicture}[
+start chain=going left,
+node distance=0ex,
+% baseline=(current bounding box.north)
+]
+
+  \real{s}{p+\Delta}{m_2 m_3 m_4\ldots m_{n+1}}{	
+    \begin{array}{@{}c@{}}
+      (-1)^s\cdot 2^p \cdot \overline{0,1m_2 m_3 m_4\ldots m_{n+1}}\\
+      p_{min} \leqslant p \leqslant p_{max}\\      
+    \end{array}
+  }
+%   \foreach \p/\m/\letter/\pos in {p+\xi/m_2 m_3\ldots m_{n+1}/а)/,p+\xi/m_2 m_3\ldots m_{n+1}/а)/,}
+%   {
+%     \real[]{s}{\p}{\m}
+%   };
+\tikzstyle{nextm}	= [below = 4ex of m]
+
+%   \real[nextm]{s}{000\ldots000}{m_1 m_2 m_3\ldots m_{n}}
+  \real[nextm]{s}{000\ldots000}{m_2 m_3 m_4\ldots m_{n+1}}{	(-1)^s\cdot 2^{p_{min}} \cdot \overline{0,0m_2 m_3 m_4\ldots m_{n+1}}	}
+  \real[nextm]{s}{000\ldots000}{000\ldots 0}{	(-1)^s\cdot 0	}
+%   \real[nextm]{s}{000\ldots000}{000\ldots 0}{	\pm 0	}
+
+  \real[nextm]{s}{111\ldots111}{000\ldots 0}{	(-1)^s\cdot \infty	}
+%   \real[nextm]{s}{111\ldots111}{000\ldots 0}{	\pm \infty	}
+  \real[nextm]{x}{111\ldots111}{q x x\ldots x}{\text{нечисло}~(nan)}
+
+\end{tikzpicture}
+}
+
+\setlength{\parskip}{0.1\parskip}
+\scriptsize
+
+Нециклическая неассоциативная арифметика:
+% \hfill %для разных $p$:
+$x + (y + z) \neq (x+y) + z$
+% , $max + 1 = max$
+% \hfill 
+% для float $\displaystyle \sum\limits_{i=0}^\infty \frac{1}{i} \approx 15,4$ 
+\strut
+
+% $32 = 1+8+24$ бита "--- одинарная точность, $float$; 
+% \mbox{$64=1+11+53$~бита "--- двойная, $double$}
+% 
+% % $32$ бита ($1/8/24$) "--- одинарная точность, $float$, $\displaystyle \sum\limits_{i=0}^\infty \frac{1}{i} \approx 15,4$; 
+% % \mbox{$64$~($1/11/53$) "--- двойная, $double$}
+
+% \noindent\begin{tabularx}{\linewidth}{@{}Lr@{~}c@{~}l@{}}
+% $32 = 1+8+24$ бита "--- одинарная точность, $float$;& $2^{-126} = 2^{-125}\cdot0,1$ & $\leqslant x \leqslant$ & $2^{127} \cdot (2 - 2^{-23})= 2^{128}\cdot0,(1)$
+% \\
+% \mbox{$64=1+11+53$~бита "--- двойная, $double$}
+% \end{tabularx}
+\noindent\begin{tabularx}{\linewidth}{@{}Lr@{~}c@{~}r@{$\cdot$}l}
+$32 = 1+8+23$ бита "--- одинарная точность, $float$ & $2^{-126}$ & $\leqslant |x| \leqslant$ & $2^{127} $&$ (2 - 2^{-23})$
+\\
+\mbox{$64=1+11+52$~бита "--- двойная, $double$}& $2^{-1022}$ & $\leqslant |x| \leqslant$ & $2^{1023} $&$ (2 - 2^{-52})$
+\end{tabularx}
+
+Округление: \termin{к~ближайшему|чётному,} к~ближайшему|$\infty$, к~$0$, к~$+\infty$ (вверх), к~$-\infty$ (вниз)
+
+% Ни одно конечное представление с~плавающей запятой 
+
+\smallskip
+C/C++:
+$
+\mathlst{float} \subseteq \mathlst{double} \subseteq \mathlst{long double} \subset \Realset
+$, 
+но даже $\mathlst{long double} \neq \Realset$
+\end{adjustwidth}
+\end{frame}
+\endgroup
