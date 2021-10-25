@@ -1,0 +1,30 @@
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.exe
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\example.csv
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.deps.json
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.json
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.dev.json
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.dll
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.pdb
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.csproj.AssemblyReference.cache
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.AssemblyInfoInputs.cache
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.AssemblyInfo.cs
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.csproj.CoreCompileInputs.cache
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.dll
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.pdb
+C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.genruntimeconfig.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.exe
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\example.csv
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.deps.json
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.json
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.dev.json
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.dll
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.pdb
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.csproj.AssemblyReference.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.GeneratedMSBuildEditorConfig.editorconfig
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.AssemblyInfoInputs.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.AssemblyInfo.cs
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.csproj.CoreCompileInputs.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.dll
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.pdb
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.genruntimeconfig.cache

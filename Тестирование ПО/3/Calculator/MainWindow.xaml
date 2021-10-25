@@ -1,0 +1,27 @@
+﻿<Window x:Class="Calculator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Calculator"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="507" Width="659">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="225*"/>
+            <ColumnDefinition Width="415*"/>
+            <ColumnDefinition Width="11*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="A=" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="90" Width="310" FontSize="48" Grid.ColumnSpan="2"/>
+        <TextBox PreviewTextInput="NumberValidationTextBox" x:Name="TbA" x:FieldModifier="public" Height="90" Margin="100,10,5,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="48" Grid.Column="1"/>
+        <Label Content="B=" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top" Height="90" Width="310" FontSize="48" Grid.ColumnSpan="2"/>
+        <TextBox PreviewTextInput="NumberValidationTextBox" x:Name="TbB" x:FieldModifier="public" Height="90" Margin="100,100,5,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="48" Grid.Column="1"/>
+        <Button x:Name="BtnPlus" Click="onPlusClicked" Content="+" HorizontalAlignment="Left" Margin="10,195,0,0" VerticalAlignment="Top" Width="310" Height="60" FontSize="48" Grid.ColumnSpan="2"/>
+        <Button x:Name="BtnMinus" Click="onMinusClicked" Content="-" HorizontalAlignment="Left" Margin="100,195,0,0" VerticalAlignment="Top" Width="310" Height="60" FontSize="48" Grid.Column="1"/>
+        <Button x:Name="BtnMultiply" Click="onMultiplyClicked" Content="*" HorizontalAlignment="Left" Margin="10,260,0,0" VerticalAlignment="Top" Width="310" Height="60" FontSize="48" Grid.ColumnSpan="2"/>
+        <Button x:Name="BtnSub" Click="onDivideClicked" Content="/" HorizontalAlignment="Left" Margin="100,260,0,0" VerticalAlignment="Top" Width="310" Height="60" FontSize="48" Grid.Column="1"/>
+        <Label Content="RESULT=" HorizontalAlignment="Left" Margin="10,325,0,0" VerticalAlignment="Top" Height="90" Width="310" FontSize="48" Grid.ColumnSpan="2"/>
+        <Label x:Name="LbResult" x:FieldModifier="public" Content="" Margin="100,325,5,0" VerticalAlignment="Top" Height="90" FontSize="48" Grid.Column="1"/>
+        <Label x:Name="LbInfo" Content="" x:FieldModifier="public" HorizontalAlignment="Left" Margin="10,415,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="51" Width="625"/>
+    </Grid>
+</Window>
