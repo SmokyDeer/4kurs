@@ -1,6 +1,3 @@
-D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\ru\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll
-D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll
-D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll
 D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll
 D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll
 D:\институт\4 КУРС\4kurs\Тестирование ПО\Лабораторная работа №2\Calculator\UnitTests\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll

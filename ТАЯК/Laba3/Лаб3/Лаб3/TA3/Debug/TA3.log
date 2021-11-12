@@ -1,0 +1,7 @@
+﻿  Source.cpp
+c:\users\yngvar\source\repos\ta3\ta3\source.cpp(83): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\yngvar\source\repos\ta3\ta3\source.cpp(98): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\yngvar\source\repos\ta3\ta3\source.cpp(163): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\yngvar\source\repos\ta3\ta3\source.cpp(167): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\yngvar\source\repos\ta3\ta3\source.cpp(203): warning C4715: Storage::push_link: значение возвращается не при всех путях выполнения
+  TA3.vcxproj -> C:\Users\yngvar\source\repos\TA3\Debug\TA3.exe

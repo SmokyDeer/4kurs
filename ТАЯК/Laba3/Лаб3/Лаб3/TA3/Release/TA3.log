@@ -1,0 +1,11 @@
+﻿  Source.cpp
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\Лаб3\Лаб3\TA3\Source.cpp(89,23): warning C4018: '<': signed/unsigned mismatch
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\Лаб3\Лаб3\TA3\Source.cpp(104,23): warning C4018: '<': signed/unsigned mismatch
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\Лаб3\Лаб3\TA3\Source.cpp(169,17): warning C4018: '<': signed/unsigned mismatch
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\Лаб3\Лаб3\TA3\Source.cpp(173,19): warning C4018: '<': signed/unsigned mismatch
+  Generating code
+  4 of 1193 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  TA3.vcxproj -> D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\Лаб3\Лаб3\Release\TA3.exe

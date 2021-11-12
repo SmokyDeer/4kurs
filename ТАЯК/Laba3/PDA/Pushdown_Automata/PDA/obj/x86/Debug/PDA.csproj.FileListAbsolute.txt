@@ -1,0 +1,6 @@
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\bin\Debug\PDA.exe
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\bin\Debug\PDA.pdb
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\obj\x86\Debug\PDA.csproj.AssemblyReference.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\obj\x86\Debug\PDA.csproj.CoreCompileInputs.cache
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\obj\x86\Debug\PDA.exe
+D:\институт\4 КУРС\4kurs\ТАЯК\Laba3\PDA\Pushdown_Automata\PDA\obj\x86\Debug\PDA.pdb
