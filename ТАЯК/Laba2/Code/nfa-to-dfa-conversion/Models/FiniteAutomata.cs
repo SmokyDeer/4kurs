@@ -382,25 +382,32 @@ namespace nfa_to_dfa_conversion.Models
             {
                 return false;
             }
-
-            FAState currentState = InitialState;
-            FATransition currentTransition;
-            foreach (char letter in input)
+            try
             {
-                Console.Write("Transition {0} - {1} >>> ", letter, currentState.StateName);
+                FAState currentState = InitialState;
+                FATransition currentTransition;
+                foreach (char letter in input)
+                {
+                    Console.Write("Transition {0} - {1} >>> ", letter, currentState.StateName);
 
-                currentTransition = this.Transitions.FirstOrDefault(x => x.FromState.StateName == currentState.StateName && x.TransitionSymbol == letter);
-                currentState = currentTransition.ToState.RandomState();
-                Console.WriteLine(currentState.StateName);
+                    currentTransition = this.Transitions.FirstOrDefault(x => x.FromState.StateName == currentState.StateName && x.TransitionSymbol == letter);
+                    currentState = currentTransition.ToState.RandomState();
+                    Console.WriteLine(currentState.StateName);
+                }
+
+                Console.WriteLine("Current State is {0}.(Final State: {1})", currentState.StateName, currentState.IsFinalState ? "Yes" : "No");
+                if (currentState.IsFinalState)
+                {
+                    return true;
+                }
+
+                return false;
             }
-
-            Console.WriteLine("Current State is {0}.(Final State: {1})", currentState.StateName, currentState.IsFinalState ? "Yes" : "No");
-            if (currentState.IsFinalState)
+            catch
             {
-                return true;
+                Console.WriteLine("Error trace");
+                return false;
             }
-
-            return false;
         }
     }
 

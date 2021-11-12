@@ -1,0 +1,7 @@
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\bin\Debug\ConsoleApp1.exe.config
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\bin\Debug\ConsoleApp1.exe
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\bin\Debug\ConsoleApp1.pdb
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\obj\Debug\ConsoleApp1.csproj.AssemblyReference.cache
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\obj\Debug\ConsoleApp1.csproj.CoreCompileInputs.cache
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\obj\Debug\ConsoleApp1.exe
+D:\институт\4 КУРС\4kurs\trashCode\ConsoleApp1\obj\Debug\ConsoleApp1.pdb

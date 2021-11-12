@@ -14,7 +14,6 @@ C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-mas
 C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.pdb
 C:\Users\dmitry\Downloads\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion-master\nfa-to-dfa-conversion\obj\Debug\netcoreapp3.1\nfa-to-dfa-conversion.genruntimeconfig.cache
 D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.exe
-D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\example.csv
 D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.deps.json
 D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.json
 D:\институт\4 КУРС\4kurs\ТАЯК\Laba2\Code\nfa-to-dfa-conversion\bin\Debug\netcoreapp3.1\nfa-to-dfa-conversion.runtimeconfig.dev.json
